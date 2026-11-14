@@ -17,8 +17,8 @@ android {
         applicationId = "il.co.eventerwatch"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.2.1"
+        versionCode = 5
+        versionName = "1.2.2"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

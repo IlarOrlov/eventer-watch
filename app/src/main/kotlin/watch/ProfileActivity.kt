@@ -63,7 +63,7 @@ class ProfileActivity : Activity() {
             addView(radio(ID_MALE, "Male", old.gender == Gender.MALE))
         })
 
-        field(col, ID_BIRTH, "Birth date dd-mm-yyyy (only if an event asks)", old.birthDate, InputType.TYPE_CLASS_DATETIME)
+        field(col, ID_BIRTH, "Birth date – just type the digits, e.g. 05041986 (only if an event asks)", old.birthDate, InputType.TYPE_CLASS_NUMBER)
         field(col, ID_AGE, "Age (only if an event asks)", old.age?.toString() ?: "", InputType.TYPE_CLASS_NUMBER)
         field(col, ID_CITY, "City / area of residence", old.city, InputType.TYPE_CLASS_TEXT)
         field(col, ID_FACEBOOK, "Facebook profile link", old.facebookUrl, InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT)
@@ -85,6 +85,24 @@ class ProfileActivity : Activity() {
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = Ui.dp(this@ProfileActivity, 12) })
 
         setContentView(ScrollView(this).apply { setBackgroundColor(Ui.BG); addView(col) })
+
+        // The number keyboard has no dash key, so the dashes are added as the digits are typed.
+        val birth = findViewById<EditText>(ID_BIRTH)
+        // Numeric keyboard, but a key listener that also accepts '-', otherwise Android strips our dashes.
+        birth.keyListener = android.text.method.DigitsKeyListener.getInstance("0123456789-/.")
+        birth.addTextChangedListener(object : android.text.TextWatcher {
+            private var busy = false
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) = Unit
+            override fun afterTextChanged(s: android.text.Editable) {
+                if (busy) return
+                val formatted = BirthDate.typing(BirthDate.normalize(s.toString()))
+                if (formatted != s.toString()) {
+                    busy = true
+                    try { s.replace(0, s.length, formatted) } finally { busy = false }
+                }
+            }
+        })
     }
 
     private fun save() {
@@ -98,7 +116,7 @@ class ProfileActivity : Activity() {
                 findViewById<RadioButton>(ID_MALE).isChecked -> Gender.MALE
                 else -> null
             },
-            birthDate = text(ID_BIRTH).trim(),
+            birthDate = BirthDate.normalize(text(ID_BIRTH)),
             age = text(ID_AGE).trim().toIntOrNull(),
             city = text(ID_CITY).trim(),
             facebookUrl = text(ID_FACEBOOK).trim(),

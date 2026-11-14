@@ -110,6 +110,26 @@ class ProfileActivityTest {
         assertTrue(a.isFinishing)
     }
 
+    @Test fun birthDateFieldAddsDashesWhileTypingOnANumberKeyboard() {
+        val a = open()
+        val f = a.findViewById<EditText>(ProfileActivity.ID_BIRTH)
+        assertEquals(android.text.InputType.TYPE_CLASS_NUMBER, f.inputType and android.text.InputType.TYPE_MASK_CLASS)
+        f.setText("05041986")
+        assertEquals("05-04-1986", f.text.toString())
+    }
+
+    @Test fun birthDateIsSavedInDdMmYyyy() {
+        val a = open()
+        a.type(ProfileActivity.ID_NAME, "Dana Levi")
+        a.type(ProfileActivity.ID_ID, "123456782")
+        a.type(ProfileActivity.ID_PHONE, "0501234567")
+        a.type(ProfileActivity.ID_EMAIL, "dana@example.com")
+        a.findViewById<RadioButton>(ProfileActivity.ID_FEMALE).isChecked = true
+        a.type(ProfileActivity.ID_BIRTH, "5/4/1986")
+        a.findViewById<Button>(ProfileActivity.ID_SAVE).performClick()
+        assertEquals("05-04-1986", ProfileStore.forContext(context).load()!!.birthDate)
+    }
+
     @Test fun invalidProfileShowsProblemsAndIsNotSaved() {
         val a = open()
         a.type(ProfileActivity.ID_NAME, "Dana")
