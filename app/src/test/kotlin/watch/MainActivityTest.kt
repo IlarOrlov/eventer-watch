@@ -46,6 +46,9 @@ class MainActivityTest {
         assertFalse(notif.done)
         assertNotNull(notif.fix)
         assertFalse(items.single { it.id == Onboarding.BATTERY }.done)
+        val overlay = items.single { it.id == Onboarding.OVERLAY }
+        assertFalse(overlay.done)
+        assertNotNull(overlay.fix)
         assertFalse(items.single { it.id == Onboarding.SAMSUNG }.done)
     }
 

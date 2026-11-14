@@ -21,3 +21,15 @@ Method: read the site's own JS bundles (`/js/min_apps/eventerSiteApp.min.js`, `p
 
 ## Decision needed
 See conversation: the design's "event flips to on-sale" signal is not available from public data. Options recorded there.
+
+## Pre-sale event comparison (2026-11-14)
+`nye2027` (sale not open yet) vs a live event (`vsh2f`): `/events/explainNames/<code>.js` has the same
+`status`, `ticketPlatform.isHidden` and `isPending`; no public boolean differs between pre-sale and on-sale.
+The event does appear in `/sliders/list.js`, so new-event detection works for it.
+`docs/fixtures/nye2027-before-sale.explainNames.json` is a snapshot taken before sale; diff it against a fresh
+fetch once sales open to find a field that changes.
+
+## Per-event checkout forms differ
+`/events/<id>/dataForSale.js` -> `settings` holds `guestInfoFields` (name, sid, phone, email, age, gender),
+`namePerTicket`, `allowMultipleTickets`, `guestQuestions` (types seen: boolean, igProfile; more exist).
+Most events need only name, ID, phone, email; some add gender, birth date, per-ticket details and extra questions.

@@ -9,6 +9,8 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 
 class Alarm(private val context: Context) {
@@ -59,7 +61,14 @@ class Alarm(private val context: Context) {
         val body = alerts.joinToString("\n") {
             (if (it is Alert.SaleOpened) "Sale opened: " else "New: ") + it.event.title
         }
-        val pi = openUrlIntent(first.event.url, ID_ALERT)
+        val screen = Intent(context, AlarmActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(AlarmActivity.EXTRA_URLS, alerts.map { it.event.url }.toTypedArray())
+            .putExtra(AlarmActivity.EXTRA_TITLES, alerts.map { it.event.title }.toTypedArray())
+        val pi = PendingIntent.getActivity(
+            context, ID_ALERT, screen,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         val n = NotificationCompat.Builder(context, CHANNEL_ALARM)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle(title)
@@ -74,6 +83,21 @@ class Alarm(private val context: Context) {
             .build()
         n.flags = n.flags or Notification.FLAG_INSISTENT // keep ringing until dismissed
         nm.notify(ID_ALERT, n)
+        wakeScreen()
+        // With "display over other apps" granted Android lets a background service start the
+        // alarm screen even while the phone is unlocked and in use.
+        if (Settings.canDrawOverlays(context)) {
+            try { context.startActivity(screen) } catch (e: Exception) { /* notification still shown */ }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun wakeScreen() {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        pm.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "eventerwatch:wake",
+        ).acquire(8_000)
     }
 
     fun raiseHealth(e: HealthEvent) {
@@ -103,11 +127,4 @@ class Alarm(private val context: Context) {
 
     private fun rawUri(res: Int): Uri = Uri.parse("android.resource://${context.packageName}/$res")
 
-    private fun openUrlIntent(url: String, requestCode: Int): PendingIntent {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return PendingIntent.getActivity(
-            context, requestCode, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-    }
 }

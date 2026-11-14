@@ -31,14 +31,31 @@ class AlarmTest {
     }
 
     @Test
-    fun raiseOpensFirstEventUrl() {
+    fun tapAndFullScreenOpenTheAlarmScreenCarryingTheFirstUrl() {
         val alarm = Alarm(context).also { it.ensureChannels() }
         alarm.raise(listOf(Alert.NewEvent(ev("שלום", "https://www.eventer.co.il/אירוע")), Alert.NewEvent(ev("b"))))
         val n = shadowOf(nm).allNotifications.single { it.channelId == Alarm.CHANNEL_ALARM }
-        val intent: Intent = shadowOf(n.contentIntent).savedIntent
-        assertEquals(Intent.ACTION_VIEW, intent.action)
-        assertEquals("https://www.eventer.co.il/אירוע", intent.data.toString().let { android.net.Uri.decode(it) })
-        assertNotNull(n.fullScreenIntent)
+        for (pi in listOf(n.contentIntent, n.fullScreenIntent)) {
+            val intent: Intent = shadowOf(pi).savedIntent
+            assertEquals(AlarmActivity::class.java.name, intent.component!!.className)
+            assertEquals("https://www.eventer.co.il/אירוע", intent.getStringArrayExtra(AlarmActivity.EXTRA_URLS)!![0])
+            assertEquals(2, intent.getStringArrayExtra(AlarmActivity.EXTRA_TITLES)!!.size)
+        }
+    }
+
+    @Test
+    fun raiseShowsAlarmScreenDirectlyWhenOverlayPermitted() {
+        org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(true)
+        Alarm(context).also { it.ensureChannels() }.raise(listOf(Alert.NewEvent(ev("a"))))
+        val started = shadowOf(context).nextStartedActivity
+        assertEquals(AlarmActivity::class.java.name, started.component!!.className)
+    }
+
+    @Test
+    fun raiseDoesNotForceActivityWithoutOverlayPermission() {
+        org.robolectric.shadows.ShadowSettings.setCanDrawOverlays(false)
+        Alarm(context).also { it.ensureChannels() }.raise(listOf(Alert.NewEvent(ev("a"))))
+        assertNull(shadowOf(context).nextStartedActivity)
     }
 
     @Test

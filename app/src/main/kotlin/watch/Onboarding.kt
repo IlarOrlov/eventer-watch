@@ -19,6 +19,7 @@ data class Requirement(
 object Onboarding {
     const val NOTIFICATIONS = "notifications"
     const val FULL_SCREEN = "fullscreen"
+    const val OVERLAY = "overlay"
     const val BATTERY = "battery"
     const val SAMSUNG = "samsung"
 
@@ -49,6 +50,12 @@ object Onboarding {
                 FULL_SCREEN, "Full-screen alarms",
                 "Allow full-screen notifications so the screen wakes up for an alarm.",
                 fullScreenOk, fullScreenFix,
+            ),
+            Requirement(
+                OVERLAY, "Display over other apps",
+                "Lets the alarm screen open by itself while you are using the phone.",
+                Settings.canDrawOverlays(c),
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkg),
             ),
             Requirement(
                 BATTERY, "Battery optimization",
