@@ -189,8 +189,10 @@ class MainActivity : Activity() {
     }
 
     private fun renderBuyer() {
-        val p = ProfileStore.forContext(this).load()
-        profileSummary.text = if (p == null) "Add the buyer's details so the app can fill the checkout for you."
+        val store = ProfileStore.forContext(this)
+        val p = store.load()
+        profileSummary.text = if (p == null && store.exists()) "Saved buyer details can't be read. Open Buyer details and save them again."
+        else if (p == null) "Add the buyer's details so the app can fill the checkout for you."
         else "Ready: ${p.fullName} · ${p.ticketCount} ticket(s)"
     }
 

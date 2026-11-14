@@ -110,6 +110,35 @@ class ProfileActivityTest {
         assertTrue(a.isFinishing)
     }
 
+    private fun fillValid(a: ProfileActivity) {
+        a.type(ProfileActivity.ID_NAME, "Dana Levi")
+        a.type(ProfileActivity.ID_ID, "123456782")
+        a.type(ProfileActivity.ID_PHONE, "0501234567")
+        a.type(ProfileActivity.ID_EMAIL, "dana@example.com")
+        a.findViewById<RadioButton>(ProfileActivity.ID_FEMALE).isChecked = true
+    }
+
+    @Test fun aStorageFailureIsShownNotSwallowedOrCrashed() {
+        ProfileActivity.boxOverride = SecretBox { throw IllegalStateException("keystore down") }
+        val a = Robolectric.buildActivity(ProfileActivity::class.java).setup().get()
+        fillValid(a)
+        a.findViewById<Button>(ProfileActivity.ID_SAVE).performClick()
+        assertFalse(a.isFinishing)
+        assertTrue(a.findViewById<android.widget.TextView>(ProfileActivity.ID_PROBLEMS).text.toString().contains("Could not save"))
+    }
+
+    @Test fun aSaveThatCannotBeReadBackIsReported() {
+        var n = 0
+        val keyA = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+        val keyB = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+        ProfileActivity.boxOverride = SecretBox { if (n++ == 0) keyA else keyB } // encrypts with one key, reads with another
+        val a = Robolectric.buildActivity(ProfileActivity::class.java).setup().get()
+        fillValid(a)
+        a.findViewById<Button>(ProfileActivity.ID_SAVE).performClick()
+        assertFalse(a.isFinishing)
+        assertTrue(a.findViewById<android.widget.TextView>(ProfileActivity.ID_PROBLEMS).text.toString().contains("could not be read back"))
+    }
+
     @Test fun birthDateFieldAddsDashesWhileTypingOnANumberKeyboard() {
         val a = open()
         val f = a.findViewById<EditText>(ProfileActivity.ID_BIRTH)

@@ -22,6 +22,9 @@ class ProfileStore(private val file: File, private val box: SecretBox) {
         }
     }
 
+    /** True when something is stored, even if it can no longer be read. */
+    fun exists() = file.exists()
+
     fun clear() {
         file.delete()
     }

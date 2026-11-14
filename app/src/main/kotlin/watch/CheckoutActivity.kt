@@ -29,6 +29,7 @@ import kotlin.random.Random
 class CheckoutActivity : Activity() {
     companion object {
         const val EXTRA_URL = "url"
+        const val ID_BANNER = 9301
         private const val POLL_MS = 400L
         private const val RELOAD_MS = 20_000L
 
@@ -62,11 +63,13 @@ class CheckoutActivity : Activity() {
         setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        profile = ProfileStore.forContext(this).load()
+        val store = ProfileStore.forContext(this)
+        profile = store.load()
         engine = assets.open("checkout.js").bufferedReader().use { it.readText() }
 
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Ui.BG) }
         banner = Ui.text(this, "", 15f, Ui.TEXT, bold = true).apply {
+            id = ID_BANNER
             gravity = Gravity.CENTER_VERTICAL
             setPadding(Ui.dp(context, 16), Ui.dp(context, 12), Ui.dp(context, 16), Ui.dp(context, 12))
         }
@@ -93,7 +96,11 @@ class CheckoutActivity : Activity() {
         root.addView(webView, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
 
-        if (profile == null) setBanner("No buyer details saved – open the app and add them", Ui.AMBER, Ui.BG)
+        if (profile == null) setBanner(
+            if (store.exists()) "Saved buyer details can't be read – open Buyer details and save them again"
+            else "No buyer details saved – open the app and add them",
+            Ui.AMBER, Ui.BG,
+        )
         else setBanner("Starting…", Ui.ACCENT, 0xFFFFFFFF.toInt())
         lastReload = SystemClock.elapsedRealtime()
         webView.loadUrl(url)

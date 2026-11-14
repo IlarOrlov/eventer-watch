@@ -131,7 +131,16 @@ class ProfileActivity : Activity() {
         val problems = p.problems()
         findViewById<TextView>(ID_PROBLEMS).text = problems.joinToString("\n") { "• $it" }
         if (problems.isEmpty()) {
-            store.save(p)
+            try {
+                store.save(p)
+                if (store.load() != p) { // prove it can be read back before telling the user it is saved
+                    findViewById<TextView>(ID_PROBLEMS).text = "• Saved, but the details could not be read back. Please try again."
+                    return
+                }
+            } catch (e: Exception) {
+                findViewById<TextView>(ID_PROBLEMS).text = "• Could not save: ${e.javaClass.simpleName} ${e.message.orEmpty()}"
+                return
+            }
             Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
             finish()
         }

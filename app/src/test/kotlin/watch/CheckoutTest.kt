@@ -85,6 +85,21 @@ class CheckoutTest {
         assertFalse(shadowOf(a.webView).lastEvaluatedJavascript.orEmpty().contains("__ew.start"))
     }
 
+    private fun banner(a: CheckoutActivity) = a.findViewById<android.widget.TextView>(CheckoutActivity.ID_BANNER).text.toString()
+
+    @Test fun bannerSaysWhenNoBuyerDetailsExist() {
+        val intent = Intent(context, CheckoutActivity::class.java).putExtra(CheckoutActivity.EXTRA_URL, "https://www.eventer.co.il/x")
+        val a = Robolectric.buildActivity(CheckoutActivity::class.java, intent).setup().get()
+        assertTrue(banner(a), banner(a).contains("No buyer details"))
+    }
+
+    @Test fun bannerSaysWhenSavedDetailsCannotBeRead() {
+        java.io.File(context.filesDir, "profile.bin").writeText("not a valid encrypted profile")
+        val intent = Intent(context, CheckoutActivity::class.java).putExtra(CheckoutActivity.EXTRA_URL, "https://www.eventer.co.il/x")
+        val a = Robolectric.buildActivity(CheckoutActivity::class.java, intent).setup().get()
+        assertTrue(banner(a), banner(a).contains("can't be read"))
+    }
+
     @Test fun checkoutScreenRefusesForeignUrls() {
         val intent = Intent(context, CheckoutActivity::class.java).putExtra(CheckoutActivity.EXTRA_URL, "https://evil.example.com/")
         val a = Robolectric.buildActivity(CheckoutActivity::class.java, intent).setup().get()

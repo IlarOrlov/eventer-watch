@@ -3,7 +3,6 @@ package watch
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.security.KeyStore
-import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -12,9 +11,10 @@ import javax.crypto.spec.GCMParameterSpec
 /** AES-GCM encryption. Output layout: 12-byte IV followed by ciphertext+tag. */
 class SecretBox(private val key: () -> SecretKey) {
     fun encrypt(plain: ByteArray): ByteArray {
-        val iv = ByteArray(12).also { SecureRandom().nextBytes(it) }
         val c = Cipher.getInstance("AES/GCM/NoPadding")
-        c.init(Cipher.ENCRYPT_MODE, key(), GCMParameterSpec(128, iv))
+        // Android Keystore keys refuse a caller-supplied IV, so let the cipher choose a random one and read it back.
+        c.init(Cipher.ENCRYPT_MODE, key())
+        val iv = c.iv
         return iv + c.doFinal(plain)
     }
 
