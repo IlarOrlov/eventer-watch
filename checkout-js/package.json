@@ -1,0 +1,7 @@
+{
+  "name": "checkout-js-tests",
+  "private": true,
+  "description": "Tests for app/src/main/assets/checkout.js (run: npm test)",
+  "scripts": { "test": "node --test" },
+  "devDependencies": { "jsdom": "24.1.0" }
+}
