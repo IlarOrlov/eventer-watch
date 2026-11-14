@@ -33,3 +33,17 @@ fetch once sales open to find a field that changes.
 `/events/<id>/dataForSale.js` -> `settings` holds `guestInfoFields` (name, sid, phone, email, age, gender),
 `namePerTicket`, `allowMultipleTickets`, `guestQuestions` (types seen: boolean, igProfile; more exist).
 Most events need only name, ID, phone, email; some add gender, birth date, per-ticket details and extra questions.
+
+## "Mesibata" series (organizer events) — findings 2026-11-14
+- Events such as `mesibatapijama`, `mesibatapijama2/3`, `mesibatanostalgia*` are **hidden from the marketplace**
+  (`ticketPlatform.isHidden = true`), so `/sliders/list.js` never lists them. They exist only by direct link.
+- They do appear in the sitemap; the newest URLs sit at the end of `sitemap_13.xml`.
+- `GET /events/explainNames/<code>.js` answers 200 for a real link and 403 for an unknown one, so a single
+  small request can test whether a guessed link exists.
+- Checkout settings for the series (`mesibatapijama`): required name, ID, phone, email, gender; per-ticket
+  details; up to 10 tickets; age limit 28; two required questions (a promotional-message consent checkbox and a
+  "smokers?" radio). Payment is a hosted PayPlus page.
+- Ticket types and sale windows come from `/api/events/<id>/ticketTypes`, which needs a session (401 otherwise).
+  Not probed further: that needs a decision on how the app should obtain a session (see conversation).
+- Note: the public event JSON for organizer events also exposes the organizer's payment-provider credentials.
+  They are deliberately not stored or used anywhere in this project; consider telling Eventer.
