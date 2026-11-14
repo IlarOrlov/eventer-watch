@@ -17,7 +17,7 @@ class BackoffTest {
 
     @Test
     fun delaysDoubleWithFailures() {
-        val noJitter = Backoff(jitterMs = 0)
+        val noJitter = Backoff(jitterMs = 0, graceFailures = 0)
         assertEquals(30_000, noJitter.nextDelayMs(0))
         assertEquals(60_000, noJitter.nextDelayMs(1))
         assertEquals(120_000, noJitter.nextDelayMs(2))
@@ -26,8 +26,16 @@ class BackoffTest {
 
     @Test
     fun delayCapsAtTenMinutes() {
-        val noJitter = Backoff(jitterMs = 0)
+        val noJitter = Backoff(jitterMs = 0, graceFailures = 0)
         assertEquals(600_000, noJitter.nextDelayMs(5))
         assertEquals(600_000, noJitter.nextDelayMs(500))
+    }
+
+    @Test
+    fun firstFailuresKeepBaseDelay() {
+        val graceful = Backoff(jitterMs = 0)
+        repeat(5) { assertEquals(30_000, graceful.nextDelayMs(it)) }
+        assertEquals(60_000, graceful.nextDelayMs(5))
+        assertEquals(600_000, graceful.nextDelayMs(50))
     }
 }

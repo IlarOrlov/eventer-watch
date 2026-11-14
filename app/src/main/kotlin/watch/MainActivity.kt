@@ -26,6 +26,7 @@ class MainActivity : Activity() {
     companion object {
         const val ID_START_STOP = 9001
         const val ID_TEST_ALARM = 9002
+        const val ID_TEST_ALARM_DELAYED = 9006
         const val ID_CHECKLIST = 9003
         const val ID_STATUS = 9004
         const val ID_RECENT = 9005
@@ -55,11 +56,17 @@ class MainActivity : Activity() {
             text = "Test alarm"
             setOnClickListener { Alarm(this@MainActivity).apply { ensureChannels() }.raise(listOf(testAlert())) }
         }
+        val delayed = Button(this).apply {
+            id = ID_TEST_ALARM_DELAYED
+            text = "Test alarm in 10 s (then lock the screen)"
+            setOnClickListener { scheduleTestAlarm() }
+        }
         checklist = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; id = ID_CHECKLIST }
         recent = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; id = ID_RECENT }
         root.addView(status)
         root.addView(startStop)
         root.addView(test)
+        root.addView(delayed)
         root.addView(text("Setup", 20f))
         root.addView(checklist)
         root.addView(text("Recent detections", 20f))
@@ -85,6 +92,19 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun scheduleTestAlarm() {
+        val app = applicationContext
+        // Keep the CPU awake while the screen is locked so the alarm fires on time.
+        val lock = (getSystemService(POWER_SERVICE) as android.os.PowerManager)
+            .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "eventerwatch:test")
+        lock.acquire(20_000)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            Alarm(app).apply { ensureChannels() }.raise(listOf(testAlert()))
+            if (lock.isHeld) lock.release()
+        }, 10_000)
+        android.widget.Toast.makeText(this, "Alarm in 10 seconds – lock the screen now", android.widget.Toast.LENGTH_LONG).show()
     }
 
     private fun toggle() {

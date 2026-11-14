@@ -74,6 +74,7 @@ class WatchService : Service() {
         val poller = Poller(fetcher, FileSnapshotStore(File(filesDir, "snapshot.json")), Health())
         val clock = SimpleDateFormat("HH:mm:ss", Locale.US)
         WatchLoop(poller, Backoff()) { r ->
+            android.util.Log.i("EventerWatch", "poll outcome=${r.outcome} alerts=${r.alerts.size} health=${r.health}")
             if (r.alerts.isNotEmpty()) alarm.raise(r.alerts)
             r.health?.let { alarm.raiseHealth(it) }
             val now = System.currentTimeMillis()

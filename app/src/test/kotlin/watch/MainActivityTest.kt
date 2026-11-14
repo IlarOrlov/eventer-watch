@@ -28,6 +28,17 @@ class MainActivityTest {
     }
 
     @Test
+    fun delayedTestAlarmFiresOnlyAfterTenSeconds() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.findViewById<Button>(MainActivity.ID_TEST_ALARM_DELAYED).performClick()
+        val looper = shadowOf(android.os.Looper.getMainLooper())
+        looper.idleFor(java.time.Duration.ofSeconds(9))
+        assertTrue(shadowOf(nm).allNotifications.isEmpty())
+        looper.idleFor(java.time.Duration.ofSeconds(2))
+        assertEquals(1, shadowOf(nm).allNotifications.count { it.channelId == Alarm.CHANNEL_ALARM })
+    }
+
+    @Test
     fun checklistShowsMissingPermissions() {
         shadowOf(nm).setNotificationsEnabled(false)
         val items = Onboarding.check(context)

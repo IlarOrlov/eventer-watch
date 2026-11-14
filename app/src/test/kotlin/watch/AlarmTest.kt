@@ -49,10 +49,28 @@ class AlarmTest {
     }
 
     @Test
-    fun healthEventsPostOnAlarmChannel() {
+    fun healthEventsPostOnTheirOwnChannel() {
         val alarm = Alarm(context).also { it.ensureChannels() }
         alarm.raiseHealth(HealthEvent.WENT_BLIND)
         val n = shadowOf(nm).allNotifications.single()
-        assertEquals(Alarm.CHANNEL_ALARM, n.channelId)
+        assertEquals(Alarm.CHANNEL_HEALTH, n.channelId)
+    }
+
+    @Test
+    fun eventChannelUsesBundledSoundNotSystemAlarm() {
+        Alarm(context).ensureChannels()
+        val ch = nm.getNotificationChannel(Alarm.CHANNEL_ALARM)
+        val sound = ch.sound.toString()
+        assertTrue(sound, sound.startsWith("android.resource://${context.packageName}/"))
+        assertNotEquals(sound, nm.getNotificationChannel(Alarm.CHANNEL_HEALTH).sound.toString())
+        assertEquals(android.media.AudioAttributes.USAGE_ALARM, ch.audioAttributes.usage)
+    }
+
+    @Test
+    fun eventAlertKeepsRingingUntilDismissed() {
+        val alarm = Alarm(context).also { it.ensureChannels() }
+        alarm.raise(listOf(Alert.NewEvent(ev("a"))))
+        val n = shadowOf(nm).allNotifications.single { it.channelId == Alarm.CHANNEL_ALARM }
+        assertTrue(n.flags and android.app.Notification.FLAG_INSISTENT != 0)
     }
 }

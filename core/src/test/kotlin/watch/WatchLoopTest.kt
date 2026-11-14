@@ -26,7 +26,7 @@ class WatchLoopTest {
     }
 
     private fun loop(f: FeedFetcher, results: MutableList<PollResult> = mutableListOf()) =
-        WatchLoop(Poller(f, MemStore(), Health()), Backoff(jitterMs = 0)) { results.add(it) }
+        WatchLoop(Poller(f, MemStore(), Health()), Backoff(jitterMs = 0, graceFailures = 0)) { results.add(it) }
 
     @Test
     fun loopWaitsBackoffDelayBetweenPolls() = runTest {
@@ -62,7 +62,7 @@ class WatchLoopTest {
             override fun save(s: Map<String, Event>) = throw java.io.IOException("disk full")
         }
         val results = mutableListOf<PollResult>()
-        backgroundScope.launch { WatchLoop(Poller(f, brokenStore, Health()), Backoff(jitterMs = 0)) { results.add(it) }.run() }
+        backgroundScope.launch { WatchLoop(Poller(f, brokenStore, Health()), Backoff(jitterMs = 0, graceFailures = 0)) { results.add(it) }.run() }
         runCurrent()
         advanceTimeBy(60_001); runCurrent()
         assertEquals(2, f.calls)

@@ -13,7 +13,9 @@ import androidx.core.app.NotificationCompat
 
 class Alarm(private val context: Context) {
     companion object {
-        const val CHANNEL_ALARM = "alarm"
+        // Channel settings are immutable once created, so the ids carry a version.
+        const val CHANNEL_ALARM = "events_v2"
+        const val CHANNEL_HEALTH = "health_v2"
         const val CHANNEL_SERVICE = "service"
         const val ID_ALERT = 1001
         const val ID_HEALTH = 1002
@@ -27,16 +29,24 @@ class Alarm(private val context: Context) {
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        val alarm = NotificationChannel(CHANNEL_ALARM, "Event alarms", NotificationManager.IMPORTANCE_HIGH).apply {
+        val alarm = NotificationChannel(CHANNEL_ALARM, "New events", NotificationManager.IMPORTANCE_HIGH).apply {
             description = "Rings when a new event or a sale is detected"
-            setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), audio)
+            setSound(rawUri(R.raw.event_alert), audio)
             enableVibration(true)
             vibrationPattern = longArrayOf(0, 800, 400, 800, 400, 800)
             setBypassDnd(true)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
+        val health = NotificationChannel(CHANNEL_HEALTH, "Watcher health", NotificationManager.IMPORTANCE_HIGH).apply {
+            description = "Tells you when the watcher cannot read Eventer"
+            setSound(rawUri(R.raw.health_alert), audio)
+            enableVibration(true)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        }
         val service = NotificationChannel(CHANNEL_SERVICE, "Watcher status", NotificationManager.IMPORTANCE_LOW)
+        nm.deleteNotificationChannel("alarm")
         nm.createNotificationChannel(alarm)
+        nm.createNotificationChannel(health)
         nm.createNotificationChannel(service)
     }
 
@@ -62,6 +72,7 @@ class Alarm(private val context: Context) {
             .setAutoCancel(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
+        n.flags = n.flags or Notification.FLAG_INSISTENT // keep ringing until dismissed
         nm.notify(ID_ALERT, n)
     }
 
@@ -70,7 +81,7 @@ class Alarm(private val context: Context) {
             HealthEvent.WENT_BLIND -> "Watcher is BLIND" to "Eventer could not be read for 5 checks. You are not covered."
             HealthEvent.RECOVERED -> "Watcher recovered" to "Eventer is readable again."
         }
-        val n = NotificationCompat.Builder(context, CHANNEL_ALARM)
+        val n = NotificationCompat.Builder(context, CHANNEL_HEALTH)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(text)
@@ -89,6 +100,8 @@ class Alarm(private val context: Context) {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
+
+    private fun rawUri(res: Int): Uri = Uri.parse("android.resource://${context.packageName}/$res")
 
     private fun openUrlIntent(url: String, requestCode: Int): PendingIntent {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
