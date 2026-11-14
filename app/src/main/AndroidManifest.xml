@@ -14,5 +14,23 @@
     <application
         android:label="EventerWatch"
         android:allowBackup="false"
-        android:supportsRtl="true" />
+        android:supportsRtl="true">
+
+        <service
+            android:name="watch.WatchService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Polls a public event feed and alerts the user to new events" />
+        </service>
+
+        <receiver
+            android:name="watch.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>

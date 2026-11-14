@@ -20,10 +20,14 @@ class Poller(
         return when (val parsed = FeedParser.parse(body)) {
             is ParseResult.ShapeChanged -> failed(Outcome.SHAPE_CHANGED)
             is ParseResult.Ok -> {
-                val previous = store.load()
-                val alerts = diff(previous, parsed.events)
-                store.save(snapshotOf(parsed.events, previous))
-                PollResult(alerts, health.record(Outcome.OK), Outcome.OK)
+                try {
+                    val previous = store.load()
+                    val alerts = diff(previous, parsed.events)
+                    store.save(snapshotOf(parsed.events, previous))
+                    PollResult(alerts, health.record(Outcome.OK), Outcome.OK)
+                } catch (e: Exception) {
+                    failed(Outcome.FAILED)
+                }
             }
         }
     }
