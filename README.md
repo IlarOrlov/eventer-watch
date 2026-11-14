@@ -2,7 +2,8 @@
 
 Android app that polls eventer.co.il every ~30 s in a foreground service. When a new event appears
 (or an event flips to on-sale, best effort) it rings a full-screen alarm and opens the event page.
-Stage 2 (assisted checkout) is not built; it will always stop at payment, CAPTCHA and 3DS.
+For the "מסיבתה" party line it also finds new events the homepage never lists and opens an auto-filling checkout.
+The checkout assistant always stops at payment, CAPTCHA/verification and any question it cannot answer.
 
 ## Build
 
@@ -29,6 +30,22 @@ If a debug build is already installed, uninstall it first: debug and release use
 - `app/` is the Android shell (service, alarm, snapshot store, UI).
 - Empty feeds, Cloudflare pages and garbage count as failures, never as "all events removed".
   After 5 consecutive failures a distinct "Watcher is BLIND" alarm fires; a recovery notice follows.
+
+## The "מסיבתה" series (auto-checkout)
+
+- **Buyer details** are entered in the app (Buyer details). They are stored AES-GCM encrypted in the app's private
+  storage using an Android Keystore key. They are never in this repository, never uploaded, and only ever injected
+  into `eventer.co.il` pages.
+- **Finding new events.** These events are hidden from Eventer's homepage, so three signals are combined:
+  the newest sitemap file (every ~60 s), probing the next likely link names (`mesibatapijama4`, ...; a real link
+  answers 200, unknown ones 403) a few per 30 s cycle, and the homepage feed filtered for the series.
+  Nothing can promise to be first or to catch a link whose name breaks the pattern; the organizer controls that.
+- **Checkout.** The alarm opens the event in an in-app browser. `app/src/main/assets/checkout.js` (tested with
+  `cd checkout-js && npm install && npm test`) waits for tickets, selects the quantity, presses continue, fills every
+  guest form and the event's questions, ticks the compulsory checkboxes and continues. It stops and rings at the
+  payment page, at a CAPTCHA, and at any required question it cannot answer. It never touches payment frames.
+- Because the live checkout could not be exercised in development, run a rehearsal on a real event link first
+  (Buying > Open in checkout) and watch the banner; it never presses the final pay button.
 
 ## Known limits
 

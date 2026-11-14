@@ -32,7 +32,17 @@ class MainActivity : Activity() {
         const val ID_CHECKLIST = 9003
         const val ID_STATUS = 9004
         const val ID_RECENT = 9005
+        const val ID_PROFILE = 9007
+        const val ID_PROFILE_SUMMARY = 9008
+        const val ID_SERIES_ONLY = 9009
+        const val ID_AUTO_CHECKOUT = 9010
+        const val ID_LINK = 9011
+        const val ID_LINK_GO = 9012
     }
+
+    private lateinit var profileSummary: TextView
+    private lateinit var seriesBtn: Button
+    private lateinit var autoBtn: Button
 
     private val scope = CoroutineScope(Dispatchers.Main)
     private var collector: Job? = null
@@ -80,6 +90,51 @@ class MainActivity : Activity() {
         hero.addView(heroSub)
         hero.addView(startStop, LinearLayout.LayoutParams(-1, -2))
         page.addView(hero, LinearLayout.LayoutParams(-1, -2))
+
+        // Buying
+        page.addView(sectionTitle("Buying"))
+        val buying = column().apply {
+            background = Ui.round(this@MainActivity, Ui.CARD)
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+        }
+        profileSummary = Ui.text(this, "", 15f).apply { id = ID_PROFILE_SUMMARY }
+        buying.addView(profileSummary)
+        buying.addView(Ui.pill(this, "Buyer details", Ui.ACCENT, 0xFFFFFFFF.toInt(), 15f).apply {
+            id = ID_PROFILE
+            setOnClickListener { startActivity(Intent(this@MainActivity, ProfileActivity::class.java)) }
+        }, spaced())
+        seriesBtn = Ui.pill(this, "", Ui.CARD_HI, Ui.TEXT, 14f).apply {
+            id = ID_SERIES_ONLY
+            setOnClickListener { AppPrefs.setSeriesOnly(context, !AppPrefs.seriesOnly(context)); renderToggles() }
+        }
+        autoBtn = Ui.pill(this, "", Ui.CARD_HI, Ui.TEXT, 14f).apply {
+            id = ID_AUTO_CHECKOUT
+            setOnClickListener { AppPrefs.setAutoCheckout(context, !AppPrefs.autoCheckout(context)); renderToggles() }
+        }
+        buying.addView(seriesBtn, spaced())
+        buying.addView(autoBtn, spaced())
+        buying.addView(Ui.text(this, "Open an Eventer link in the checkout assistant", 13f, Ui.MUTED).apply {
+            setPadding(0, dp(14), 0, dp(4))
+        })
+        val link = android.widget.EditText(this).apply {
+            id = ID_LINK
+            hint = "https://www.eventer.co.il/…"
+            setHintTextColor(Ui.MUTED)
+            setTextColor(Ui.TEXT)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
+            background = Ui.round(context, Ui.CARD_HI, 12)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+        }
+        buying.addView(link, LinearLayout.LayoutParams(-1, -2))
+        buying.addView(Ui.pill(this, "Open in checkout", Ui.CARD_HI, Ui.TEXT, 15f).apply {
+            id = ID_LINK_GO
+            setOnClickListener {
+                val url = link.text.toString().trim()
+                if (CheckoutActivity.isAllowed(url)) startActivity(CheckoutActivity.intent(context, url))
+                else Toast.makeText(context, "Enter an https://www.eventer.co.il link", Toast.LENGTH_SHORT).show()
+            }
+        }, spaced())
+        page.addView(buying)
 
         // Recent
         page.addView(sectionTitle("Recent detections"))
@@ -129,6 +184,19 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         renderChecklist()
+        renderBuyer()
+        renderToggles()
+    }
+
+    private fun renderBuyer() {
+        val p = ProfileStore.forContext(this).load()
+        profileSummary.text = if (p == null) "Add the buyer's details so the app can fill the checkout for you."
+        else "Ready: ${p.fullName} · ${p.ticketCount} ticket(s)"
+    }
+
+    private fun renderToggles() {
+        seriesBtn.text = "Only מסיבתה events: " + if (AppPrefs.seriesOnly(this)) "ON" else "OFF (all events)"
+        autoBtn.text = "Open checkout automatically: " + if (AppPrefs.autoCheckout(this)) "ON" else "OFF"
     }
 
     override fun onStop() {

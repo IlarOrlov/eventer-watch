@@ -35,6 +35,15 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name="watch.CheckoutActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name="watch.AlarmActivity"
             android:exported="false"
             android:launchMode="singleTop"

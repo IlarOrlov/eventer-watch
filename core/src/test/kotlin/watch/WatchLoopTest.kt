@@ -69,6 +69,42 @@ class WatchLoopTest {
         assertEquals(Outcome.FAILED, results.first().outcome)
     }
 
+    private fun alertFor(id: String) = Alert.NewEvent(Event(id, "t$id", "https://www.eventer.co.il/$id", false))
+
+    @Test
+    fun extraAlertsAreMergedAndExtraErrorsAreIgnored() = runTest {
+        val f = CountingFetcher()
+        val results = mutableListOf<PollResult>()
+        var calls = 0
+        val extra: suspend () -> List<Alert> = { calls++; if (calls == 2) throw java.io.IOException("x") else listOf(alertFor("mesibata9")) }
+        backgroundScope.launch {
+            WatchLoop(Poller(f, MemStore(), Health()), Backoff(jitterMs = 0, graceFailures = 0), extra = extra) { results.add(it) }.run()
+        }
+        runCurrent()
+        advanceTimeBy(30_001); runCurrent()
+        assertEquals(2, results.size)
+        assertEquals(listOf("mesibata9"), results[0].alerts.map { it.event.id })
+        assertTrue(results[1].alerts.isEmpty())
+    }
+
+    @Test
+    fun feedFilterDropsFeedAlertsButNotSeriesAlerts() = runTest {
+        // first poll seeds {a}; second poll sees a new feed event "b" which the filter rejects
+        var feed = """[{"slides":[{"slideType":5,"objectRef":"a","title":"t","url":"/a","isVisible":true}]}]"""
+        val fetcher = object : FeedFetcher { override suspend fun fetch() = feed }
+        val results = mutableListOf<PollResult>()
+        backgroundScope.launch {
+            WatchLoop(
+                Poller(fetcher, MemStore(), Health()), Backoff(jitterMs = 0, graceFailures = 0),
+                extra = { listOf(alertFor("mesibata9")) }, feedFilter = { false },
+            ) { results.add(it) }.run()
+        }
+        runCurrent()
+        feed = """[{"slides":[{"slideType":5,"objectRef":"a","title":"t","url":"/a","isVisible":true},{"slideType":5,"objectRef":"b","title":"t","url":"/b","isVisible":true}]}]"""
+        advanceTimeBy(30_001); runCurrent()
+        assertEquals(listOf("mesibata9"), results[1].alerts.map { it.event.id })
+    }
+
     @Test
     fun successResetsBackoffAndReportsEveryResult() = runTest {
         val f = CountingFetcher(fail = true)

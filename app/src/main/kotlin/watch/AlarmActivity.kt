@@ -77,7 +77,13 @@ class AlarmActivity : Activity() {
 
     private fun open() {
         stopRinging()
-        urls.firstOrNull()?.let { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        urls.firstOrNull()?.let { url ->
+            val series = SeriesFilter.isSeriesCode(SeriesFilter.codeOf(url)) && ProfileStore.forContext(this).load() != null
+            startActivity(
+                if (series) CheckoutActivity.intent(this, url)
+                else Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
         finish()
     }
 

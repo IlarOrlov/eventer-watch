@@ -18,6 +18,8 @@ class Alarm(private val context: Context) {
         // Channel settings are immutable once created, so the ids carry a version.
         const val CHANNEL_ALARM = "events_v2"
         const val CHANNEL_HEALTH = "health_v2"
+        const val CHANNEL_CHECKOUT = "checkout_v1"
+        const val ID_CHECKOUT = 1004
         const val CHANNEL_SERVICE = "service"
         const val ID_ALERT = 1001
         const val ID_HEALTH = 1002
@@ -49,6 +51,14 @@ class Alarm(private val context: Context) {
         nm.deleteNotificationChannel("alarm")
         nm.createNotificationChannel(alarm)
         nm.createNotificationChannel(health)
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_CHECKOUT, "Checkout needs you", NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "The checkout assistant stopped and you need to act (payment, verification, a question)"
+                setSound(rawUri(R.raw.ready_alert), audio)
+                enableVibration(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            },
+        )
         nm.createNotificationChannel(service)
     }
 
@@ -88,7 +98,11 @@ class Alarm(private val context: Context) {
         // With "display over other apps" granted Android lets a background service start the
         // alarm screen even while the phone is unlocked and in use.
         if (Settings.canDrawOverlays(context)) {
-            try { context.startActivity(screen) } catch (e: Exception) { /* notification still shown */ }
+            val checkout = AppPrefs.autoCheckout(context) && SeriesFilter.matches(first.event) &&
+                ProfileStore.forContext(context).load() != null
+            // For the series the buyer wants, skip the alarm screen and go straight to the auto-filling checkout.
+            val target = if (checkout) CheckoutActivity.intent(context, first.event.url) else screen
+            try { context.startActivity(target) } catch (e: Exception) { /* notification still shown */ }
         }
     }
 
@@ -116,6 +130,31 @@ class Alarm(private val context: Context) {
             .setAutoCancel(true)
             .build()
         nm.notify(ID_HEALTH, n)
+    }
+
+    fun raiseCheckout(s: CheckoutStatus) {
+        val title = when (s.phase) {
+            "payment" -> "Pay now – tickets are in the cart"
+            "human" -> "Verification needs you"
+            else -> "A question needs you"
+        }
+        val back = PendingIntent.getActivity(
+            context, ID_CHECKOUT,
+            Intent(context, CheckoutActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val n = NotificationCompat.Builder(context, CHANNEL_CHECKOUT)
+            .setSmallIcon(R.drawable.ic_bell)
+            .setColor(Ui.GREEN)
+            .setContentTitle(title)
+            .setContentText(s.detail.ifBlank { "Open the checkout" })
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setContentIntent(back)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(ID_CHECKOUT, n)
+        wakeScreen()
     }
 
     fun serviceNotification(text: String): Notification =

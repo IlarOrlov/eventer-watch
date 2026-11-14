@@ -54,8 +54,10 @@ class SeriesWatcher(
     private val sitemap: SitemapSource,
     private val probe: EventProbe,
     private val store: SeriesStore,
-    private val probesPerCheck: Int = 4,
+    private val probesPerCheck: Int = 3,
     private val sitemapEvery: Int = 2,
+    /** Pause between consecutive probes so requests are never bunched up. */
+    private val pauseMs: Long = 400,
 ) {
     private var checks = 0
     private var cursor = 0
@@ -81,7 +83,8 @@ class SeriesWatcher(
 
         val candidates = Candidates.next(known)
         if (candidates.isNotEmpty() && probesPerCheck > 0) {
-            repeat(minOf(probesPerCheck, candidates.size)) {
+            repeat(minOf(probesPerCheck, candidates.size)) { n ->
+                if (n > 0 && pauseMs > 0) kotlinx.coroutines.delay(pauseMs)
                 val code = candidates[cursor % candidates.size]
                 cursor++
                 when (val r = try { probe.probe(code) } catch (e: Exception) { null }) {

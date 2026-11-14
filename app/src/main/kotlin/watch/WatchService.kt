@@ -73,7 +73,14 @@ class WatchService : Service() {
         val fetcher = WakeLockFetcher(OkHttpFeedFetcher(client, FEED_URL), lock)
         val poller = Poller(fetcher, FileSnapshotStore(File(filesDir, "snapshot.json")), Health())
         val clock = SimpleDateFormat("HH:mm:ss", Locale.US)
-        WatchLoop(poller, Backoff()) { r ->
+        val series = SeriesWatcher(
+            OkHttpSitemapSource(client), OkHttpEventProbe(client), FileSeriesStore(File(filesDir, "series.json")),
+        )
+        WatchLoop(
+            poller, Backoff(),
+            extra = { series.check() },
+            feedFilter = { a -> !AppPrefs.seriesOnly(this) || SeriesFilter.matches(a.event) },
+        ) { r ->
             android.util.Log.i("EventerWatch", "poll outcome=${r.outcome} alerts=${r.alerts.size} health=${r.health}")
             if (r.alerts.isNotEmpty()) alarm.raise(r.alerts)
             r.health?.let { alarm.raiseHealth(it) }
