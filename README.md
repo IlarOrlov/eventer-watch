@@ -49,7 +49,7 @@ See [docs/INSTALL.md](docs/INSTALL.md).
   guest form and the event's questions, ticks the compulsory checkboxes and continues. It stops and rings at the
   payment page, at a CAPTCHA, and at any required question it cannot answer. It never touches payment frames.
 - Because the live checkout could not be exercised in development, run a rehearsal on a real event link first
-  (Buying > Open in checkout) and watch the banner; it never presses the final pay button.
+  (Buying > Open in checkout) on an event that is currently on sale and watch the banner; it never presses the final pay button.
 
 ## Known limits
 
@@ -67,5 +67,6 @@ See [docs/INSTALL.md](docs/INSTALL.md).
 | Signed release APK builds | yes |
 | Alarm on locked device, blind/recovery, sounds | checked on the S23 |
 | Series discovery against the live site | adapters tested with a mock server; the live sitemap and link probes were checked by hand |
-| Auto-fill checkout on a live Eventer page | **not yet verified on a phone** — rehearse first (see docs/INSTALL.md) |
+| Waiting mode on a closed sale (`mesibatapijama`) | works on the S23 (page loads, nothing to buy, keeps waiting) |
+| Auto-fill checkout on a live Eventer page | **not yet verified**: needs an event with tickets on sale (see docs/INSTALL.md) |
 | 24-hour run | **not yet done**; record the result here |

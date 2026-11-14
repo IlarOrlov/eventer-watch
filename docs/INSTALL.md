@@ -40,8 +40,9 @@ Buying more than one ticket fills the same details into every guest form; some e
 
 1. **Preview in 10 s**: press it, lock the screen, wait. The screen must wake, the chime must play and the red alarm
    screen must appear. If not, a setup item above is missing.
-2. **Buying > Open in checkout** with a live event link, for example `https://www.eventer.co.il/mesibatapijama`.
-   Watch the banner at the top. It should select tickets, press continue, fill the form and stop at the payment page
+2. **Buying > Open in checkout** with the link of an event that is **currently on sale** (pick one from the
+   Eventer homepage; a closed or sold-out sale only shows "Waiting for tickets to open", which proves the waiting mode but
+   not the filling). Watch the banner at the top. It should select tickets, press continue, fill the form and stop at the payment page
    ("Payment page"). Close it there. The app never presses the final pay button.
    If it stops with "A question needs you", note the text: that is a question the app could not answer.
 
