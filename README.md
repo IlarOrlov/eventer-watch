@@ -1,4 +1,4 @@
-# EventerWatch (Stage 1)
+# EventerWatch
 
 Android app that polls eventer.co.il every ~30 s in a foreground service. When a new event appears
 (or an event flips to on-sale, best effort) it rings a full-screen alarm and opens the event page.
@@ -35,8 +35,8 @@ If a debug build is already installed, uninstall it first: debug and release use
 - Only events featured on the homepage sliders are visible to the watcher. A brand-new event that
   is not featured yet will be missed until it is.
 - There is no public "tickets on sale" field. `onSale` is derived from slide visibility, so
-  "sale opened" alerts are weak. Providing a link to a pre-sale event would let this be verified.
-- Because of exponential backoff, "blind" fires about 7-8 minutes after the feed breaks.
+  "sale opened" alerts are weak. A pre-sale event (`nye2027`) showed no public field that changes when sales open (see `docs/feed-notes.md`).
+- "Blind" fires about 2 minutes after the feed breaks; after that the check interval backs off to at most 10 minutes.
 
 ## Acceptance status
 
