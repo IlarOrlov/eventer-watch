@@ -3,13 +3,12 @@ package watch
 import android.app.Activity
 import android.app.NotificationManager
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -42,39 +41,37 @@ class AlarmActivity : Activity() {
     private fun show(i: Intent) {
         urls = i.getStringArrayExtra(EXTRA_URLS) ?: emptyArray()
         val titles = i.getStringArrayExtra(EXTRA_TITLES) ?: emptyArray()
-        val pad = (24 * resources.displayMetrics.density).toInt()
+        val pad = Ui.dp(this, 28)
+
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#B71C1C"))
             setPadding(pad, pad, pad, pad)
+            background = Ui.gradient(this@AlarmActivity, Ui.ACCENT, Ui.RED, 0)
         }
-        root.addView(TextView(this).apply {
-            text = "New on Eventer!"
-            textSize = 28f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
+        root.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_bell)
+            setColorFilter(0xFFFFFFFF.toInt())
+            layoutParams = LinearLayout.LayoutParams(Ui.dp(context, 72), Ui.dp(context, 72))
         })
-        root.addView(TextView(this).apply {
+        root.addView(Ui.text(this, if (urls.size > 1) "${urls.size} new on Eventer" else "New on Eventer", 16f, 0xCCFFFFFF.toInt()).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, Ui.dp(context, 12), 0, Ui.dp(context, 8))
+        })
+        root.addView(Ui.text(this, titles.joinToString("\n"), 26f, bold = true).apply {
             id = ID_TITLES
-            text = titles.joinToString("\n")
-            textSize = 22f
-            setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            textDirection = View.TEXT_DIRECTION_ANY_RTL
-            setPadding(0, pad, 0, pad)
+            setPadding(0, 0, 0, Ui.dp(context, 32))
         })
-        root.addView(Button(this).apply {
+        root.addView(Ui.pill(this, "Open event page", 0xFFFFFFFF.toInt(), Ui.BG, 20f).apply {
             id = ID_OPEN
-            text = "Open event page"
-            textSize = 22f
+            minHeight = Ui.dp(context, 64)
             setOnClickListener { open() }
-        })
-        root.addView(Button(this).apply {
+        }, LinearLayout.LayoutParams(-1, -2))
+        root.addView(Ui.pill(this, "Dismiss", 0x33FFFFFF, 0xFFFFFFFF.toInt(), 16f).apply {
             id = ID_DISMISS
-            text = "Dismiss"
             setOnClickListener { stopRinging(); finish() }
-        })
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = Ui.dp(this@AlarmActivity, 12) })
         setContentView(root)
     }
 

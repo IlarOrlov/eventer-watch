@@ -70,7 +70,8 @@ class Alarm(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val n = NotificationCompat.Builder(context, CHANNEL_ALARM)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_bell)
+            .setColor(Ui.ACCENT)
             .setContentTitle(title)
             .setContentText(if (alerts.size > 1) "+${alerts.size - 1} more" else first.event.url)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -106,7 +107,8 @@ class Alarm(private val context: Context) {
             HealthEvent.RECOVERED -> "Watcher recovered" to "Eventer is readable again."
         }
         val n = NotificationCompat.Builder(context, CHANNEL_HEALTH)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_bell)
+            .setColor(Ui.AMBER)
             .setContentTitle(title)
             .setContentText(text)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -118,9 +120,16 @@ class Alarm(private val context: Context) {
 
     fun serviceNotification(text: String): Notification =
         NotificationCompat.Builder(context, CHANNEL_SERVICE)
-            .setSmallIcon(android.R.drawable.ic_menu_search)
+            .setSmallIcon(R.drawable.ic_bell)
+            .setColor(Ui.ACCENT)
             .setContentTitle("EventerWatch")
             .setContentText(text)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    context, 0, Intent(context, MainActivity::class.java),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                ),
+            )
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()

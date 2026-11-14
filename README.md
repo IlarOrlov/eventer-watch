@@ -6,17 +6,19 @@ Stage 2 (assisted checkout) is not built; it will always stop at payment, CAPTCH
 
 ## Build
 
-    ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug
+    ./gradlew :core:test :app:testDebugUnitTest :app:assembleRelease
 
-APK: `app/build/outputs/apk/debug/app-debug.apk` (sideload; min SDK 26).
+Signed release APK: `app/build/outputs/apk/release/app-release.apk` (sideload; min SDK 26).
+The signing key lives outside the repo in `~/.eventerwatch-signing/` (back it up; without it updates can't be installed over an existing install).
+If a debug build is already installed, uninstall it first: debug and release use different signatures.
 
 ## Install on the Galaxy S23
 
-1. `adb install -r app-debug.apk` (or copy the APK to the phone and open it).
+1. `adb install -r app-release.apk` (or copy the APK to the phone and open it).
 2. Open the app and work through the **Setup** checklist: notifications, full-screen alarms,
    battery optimization, and the Samsung steps (remove from "Sleeping apps"/"Deep sleeping apps",
    turn off "Put unused apps to sleep", set battery to Unrestricted).
-3. Tap **Test alarm** with the screen locked: the screen should wake, the alarm should sound and
+3. Tap **Preview in 10 s**, lock the screen, and wait: the screen should wake, the alarm should sound and
    the event page should open.
 4. Tap **Start watching**. The first check seeds silently; later checks alert.
 
@@ -40,8 +42,7 @@ APK: `app/build/outputs/apk/debug/app-debug.apk` (sideload; min SDK 26).
 
 | Check | Status |
 |---|---|
-| Unit tests (46) | passing |
-| Debug APK builds | yes |
-| Test alarm on locked device | **not yet done** (no device attached during development) |
-| 10-minute live run / airplane-mode blind test | **not yet done** |
+| Unit tests | passing |
+| Signed release APK builds | yes |
+| Alarm on locked device, blind/recovery, sounds | checked on the S23 |
 | 24-hour run on the S23 | **not yet done** (final acceptance; record result here) |
