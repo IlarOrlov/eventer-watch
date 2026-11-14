@@ -39,6 +39,19 @@ class MainActivityTest {
     }
 
     @Test
+    fun checklistStatusMarksAreCenteredInTheirCircles() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        val rows = activity.findViewById<android.view.ViewGroup>(MainActivity.ID_CHECKLIST)
+        assertTrue(rows.childCount > 0)
+        for (i in 0 until rows.childCount) {
+            val mark = (rows.getChildAt(i) as android.view.ViewGroup).getChildAt(0) as TextView
+            assertEquals("row $i", android.view.View.TEXT_ALIGNMENT_CENTER, mark.textAlignment)
+            assertEquals("row $i", android.view.Gravity.CENTER, mark.gravity)
+            assertFalse("row $i font padding shifts the glyph", mark.includeFontPadding)
+        }
+    }
+
+    @Test
     fun checklistShowsMissingPermissions() {
         shadowOf(nm).setNotificationsEnabled(false)
         val items = Onboarding.check(context)

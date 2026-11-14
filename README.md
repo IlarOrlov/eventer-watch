@@ -13,6 +13,10 @@ Signed release APK: `app/build/outputs/apk/release/app-release.apk` (sideload; m
 The signing key lives outside the repo in `~/.eventerwatch-signing/` (back it up; without it updates can't be installed over an existing install).
 If a debug build is already installed, uninstall it first: debug and release use different signatures.
 
+## Installing on a customer's phone
+
+See [docs/INSTALL.md](docs/INSTALL.md).
+
 ## Install on the Galaxy S23
 
 1. `adb install -r app-release.apk` (or copy the APK to the phone and open it).
@@ -59,7 +63,9 @@ If a debug build is already installed, uninstall it first: debug and release use
 
 | Check | Status |
 |---|---|
-| Unit tests | passing |
+| Unit tests (Kotlin) and script tests (`checkout-js`) | passing |
 | Signed release APK builds | yes |
 | Alarm on locked device, blind/recovery, sounds | checked on the S23 |
-| 24-hour run on the S23 | **not yet done** (final acceptance; record result here) |
+| Series discovery against the live site | adapters tested with a mock server; the live sitemap and link probes were checked by hand |
+| Auto-fill checkout on a live Eventer page | **not yet verified on a phone** — rehearse first (see docs/INSTALL.md) |
+| 24-hour run | **not yet done**; record the result here |

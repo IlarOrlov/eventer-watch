@@ -278,6 +278,9 @@ class MainActivity : Activity() {
             val row = card().apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
             row.addView(Ui.text(this, if (r.done) "✓" else "!", 14f, Ui.BG, bold = true).apply {
                 gravity = Gravity.CENTER
+                textAlignment = View.TEXT_ALIGNMENT_CENTER // Ui.text aligns to start for Hebrew; a badge must be centred
+                includeFontPadding = false
+                setPadding(0, 0, 0, 0)
                 background = Ui.round(this@MainActivity, if (r.done) Ui.GREEN else Ui.AMBER, 14)
                 layoutParams = LinearLayout.LayoutParams(dp(28), dp(28))
             })
