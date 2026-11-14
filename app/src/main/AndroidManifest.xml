@@ -30,6 +30,11 @@
         </activity>
 
         <activity
+            android:name="watch.ProfileActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name="watch.AlarmActivity"
             android:exported="false"
             android:launchMode="singleTop"
