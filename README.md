@@ -68,5 +68,6 @@ See [docs/INSTALL.md](docs/INSTALL.md).
 | Alarm on locked device, blind/recovery, sounds | checked on the S23 |
 | Series discovery against the live site | adapters tested with a mock server; the live sitemap and link probes were checked by hand |
 | Waiting mode on a closed sale (`mesibatapijama`) | works on the S23 (page loads, nothing to buy, keeps waiting) |
-| Auto-fill checkout on a live Eventer page | **not yet verified**: needs an event with tickets on sale (see docs/INSTALL.md) |
+| Buyer details saved and auto-filled on a live Eventer page | verified on the phone |
+| Series-specific questions (smokers, consent) and payment hand-over | **not yet seen**: first real series event |
 | 24-hour run | **not yet done**; record the result here |
